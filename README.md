@@ -86,7 +86,7 @@ Create a “HTTP(s) Monitor”
 
 URL:
 
-https://your-render-url.onrender.com/health
+https://dashboard.uptimerobot.com/monitors/801805781
 
 
 Interval: Every 5 minutes
