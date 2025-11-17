@@ -69,6 +69,59 @@ class AutoReact(discord.Client):
             )
             return  # do not also add reaction to the command itself
 
+        # ---------- EXPORT HISTORY COMMAND ----------
+        # Usage: !export_history <days>
+        if content.startswith("!export_history"):
+            perms = message.channel.permissions_for(message.author)
+            if not perms.manage_messages:
+                await message.channel.send(
+                    "You need the 'Manage Messages' permission to export history."
+                )
+                return
+
+            parts = content.split()
+            if len(parts) != 2:
+                await message.channel.send(
+                    "Usage: `!export_history <days>` (example: `!export_history 7`)"
+                )
+                return
+
+            try:
+                days = int(parts[1])
+            except ValueError:
+                await message.channel.send("Days must be a number.")
+                return
+
+            after = datetime.utcnow() - timedelta(days=days)
+
+            # Collect messages
+            history_lines = []
+            async for msg in message.channel.history(limit=None, after=after, oldest_first=True):
+                timestamp = msg.created_at.strftime("%Y-%m-%d %H:%M")
+                line = f"[{timestamp}] {msg.author.display_name}: {msg.content}"
+                history_lines.append(line)
+
+            if not history_lines:
+                await message.channel.send("No messages found in this period.")
+                return
+
+            # Write to file
+            file_content = "\n".join(history_lines)
+            filename = f"history_{message.channel.name}_{days}d.txt"
+
+            with open(filename, "w", encoding="utf-8") as f:
+                f.write(file_content)
+
+            # Send file back
+            await message.channel.send(
+                f"Exported {len(history_lines)} messages from the last {days} days:",
+                file=discord.File(filename)
+            )
+
+            # Remove file after sending
+            os.remove(filename)
+            return  # Avoid reacting to the command itself
+
         # ---------- NORMAL BEHAVIOUR ----------
         # Always try to react with ✅
         try:
