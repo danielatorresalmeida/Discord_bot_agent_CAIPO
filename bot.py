@@ -61,7 +61,7 @@ async def main():
     # Read token from environment variable set on Render
     token = os.getenv("DISCORD_BOT_TOKEN")
     if not token:
-        raise SystemExit("DMTQyNTI0MDc3NDUyMTY1MTMzMQ.G6dxLZ.OJS7J-LFHyZ71yGKVJYlH3B3plULGukgMWf5W4")
+        raise SystemExit("Error: DISCORD_BOT_TOKEN is missing")
 
     client = AutoReact(intents=intents)
 
@@ -74,11 +74,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-
-if __name__ == "__main__":
-    TOKEN = os.getenv("MMTQyNTI0MDc3NDUyMTY1mtmZmQ.G6dxLZ.OJS7J-LFHyZ7tyGKVJYlH3B3plULGukMWf5W4")
-    if not TOKEN:
-        raise SystemExit("Error: DISCORD_BOT_TOKEN is missing")
-
-    client = AutoReact(intents=intents)
-    client.run(TOKEN)
