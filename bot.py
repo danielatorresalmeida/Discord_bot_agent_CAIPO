@@ -87,9 +87,9 @@ async def start_web_server():
 # -------------------- MAIN ENTRY -------------------- #
 
 async def main():
-    token = os.getenv("DISCORD_BOT_TOKEN")
+    token = os.getenv("MTQyNTI0MDc3NDUyMTY1mtmZmQ.G6dxLZ.OJS7J-LFHyZ7tyGKVJYlH3B3plULGukMWf5W4")
     if not token:
-        raise SystemExit("Error: DISCORD_BOT_TOKEN environment variable is missing.")
+        raise SystemExit("Error: MTQyNTI0MDc3NDUyMTY1mtmZmQ.G6dxLZ.OJS7J-LFHyZ7tyGKVJYlH3B3plULGukMWf5W4 environment variable is missing.")
 
     await load_cogs()
 
