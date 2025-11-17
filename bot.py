@@ -4,6 +4,8 @@ import asyncio
 
 import discord
 from aiohttp import web
+from datetime import datetime, timedelta
+
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s: %(message)s")
 
@@ -22,18 +24,62 @@ class AutoReact(discord.Client):
         if message.author.bot or message.author.id == self.user.id:
             return
 
+        content = (message.content or "").strip()
+
+        # ---------- CLEANUP COMMAND ----------
+        # Usage.  !cleanup @user 7
+        # meaning. delete messages from @user in this channel from the last 7 days
+        if content.startswith("!cleanup"):
+            # Only allow people with Manage Messages permission
+            perms = message.channel.permissions_for(message.author)
+            if not perms.manage_messages:
+                await message.channel.send(
+                    "You need the 'Manage Messages' permission to use this command."
+                )
+                return
+
+            parts = content.split()
+            if len(parts) < 3 or not message.mentions:
+                await message.channel.send(
+                    "Usage. `!cleanup @user <days>` for example. `!cleanup @TogglBot 7`"
+                )
+                return
+
+            target_user = message.mentions[0]
+            try:
+                days = int(parts[-1])
+            except ValueError:
+                await message.channel.send("Days must be a number, for example `7`.")
+                return
+
+            after = datetime.utcnow() - timedelta(days=days)
+            deleted = 0
+
+            async for msg in message.channel.history(limit=None, after=after):
+                if msg.author.id == target_user.id:
+                    try:
+                        await msg.delete()
+                        deleted += 1
+                    except discord.HTTPException as e:
+                        logging.warning(f"Failed to delete message. {e}")
+
+            await message.channel.send(
+                f"Deleted {deleted} messages from {target_user.mention} "
+                f"in the last {days} days."
+            )
+            return  # do not also add reaction to the command itself
+
+        # ---------- NORMAL BEHAVIOUR ----------
         # Always try to react with ✅
         try:
             await message.add_reaction("✅")
         except discord.HTTPException as e:
-            logging.warning(f"Reaction failed: {e}")
+            logging.warning(f"Reaction failed. {e}")
 
         # Simple keyword reply
-        content = (message.content or "").lower()
-        if "hello bot" in content:
+        if "hello bot" in content.lower():
             await message.channel.send("Hey!")
-
-
+            
 # -------- Web server (for Render free web service) -------- #
 
 async def handle_health(request):
