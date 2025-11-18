@@ -1,138 +1,230 @@
-Discord_bot_agent_CAIPO
+Discord Bot Agent – CAIPO
 
-A lightweight Discord bot that automatically reacts to messages and responds to simple triggers.
-Built using discord.py, designed to run 24/7 on Render Free Web Services (with a health-check endpoint to prevent sleeping).
+A modular, extensible Discord automation bot built for Flo Labs R&D teams.
+This bot manages team channels, processes automations, receives webhook data, and integrates with tools like Read.ai, Toggl, Zoom, and Notion.
+
+It runs 24/7 on Render (Free Tier) using a built-in health-check web server.
 
 🚀 Features
+Core Bot Functions
 
-Adds a ✅ reaction to every user message
+Reacts to all user messages with a ✅
 
-Responds to the phrase “hello bot”
+Responds to certain triggers (e.g., “hello bot”)
 
-Includes a built-in aiohttp web server for Render uptime pings
+Modular architecture using cogs/
 
-Runs both the bot and the web endpoint in parallel
+Supports role-based and channel-based automated actions
 
-Fully environment-variable based token handling
+Designed to expand with additional team-specific behavior
 
-Clean, minimal codebase
+Integrations
+
+Read.ai Meeting Webhook → Automatically posts meeting summaries to the correct *-meetings channel
+
+Notion API → Fetch time entries, pages, or changes for internal automations
+
+Toggl API → For time tracking automations (client library included)
+
+Zoom Webhooks → Ready to receive meeting events (client library included)
+
+Dev-friendly architecture
+
+Clean cogs/ folder for team modules
+
+services/ folder for external API clients
+
+Uses environment variables for all secrets
+
+Runs Discord bot + Web server concurrently
 
 📂 Project Structure
 discord-bot-agent-CAIPO/
 │
-├── bot.py               # Main bot + web server
-├── requirements.txt     # Python dependencies
-├── runtime.txt          # Python version for Render
+├── bot.py                      # Main bot runner + aiohttp web server
+│
+├── cogs/                       # Modular bot logic (team-specific)
+│   ├── __init__.py
+│   ├── ai_robotics.py
+│   ├── alerts.py
+│   ├── all_teams_general.py
+│   ├── automation_team.py
+│   ├── design_marketing.py
+│   ├── dev_mobile.py
+│   ├── go_to_market.py
+│   ├── moodchanger.py
+│   ├── pm_team.py
+│   ├── podcasts.py
+│   └── space_team.py
+│
+├── services/                   # API clients for external tools
+│   ├── readai_client.py
+│   ├── toggl_client.py
+│   └── zoom_client.py
+│
+├── requirements.txt
+├── runtime.txt
 ├── .gitignore
 ├── .gitattributes
 └── README.md
 
 🔧 Installation & Running Locally
-1. Create and activate a virtual environment
+1. Create virtual environment
 python -m venv .venv
-source .venv/bin/activate        # macOS/Linux
-.\.venv\Scripts\activate         # Windows
+source .venv/bin/activate      # macOS/Linux
+.\.venv\Scripts\activate       # Windows
 
 2. Install dependencies
 pip install -r requirements.txt
 
-3. Set your bot token
+3. Configure environment variables
 
-Create an environment variable:
+Create a .env file or set system env variables:
 
-Windows (PowerShell):
+Discord
+DISCORD_BOT_TOKEN=your_bot_token
 
-setx DISCORD_BOT_TOKEN "YOUR_TOKEN_HERE"
+Notion
+NOTION_API_TOKEN=your_notion_token
+NOTION_DATABASE_ID_TIME_ENTRIES=xxxxxxxxxxxxxxxx
 
+Read.ai Webhook Secrets (if required)
+REDAI_WEBHOOK_SECRET=optional
 
-macOS/Linux:
+Toggl
+TOGGL_API_TOKEN=xxxxxx
 
-export DISCORD_BOT_TOKEN="YOUR_TOKEN_HERE"
+Zoom
+ZOOM_WEBHOOK_SECRET=xxxxxx
 
 4. Run the bot
 python bot.py
 
 ☁️ Deploying on Render (Free Tier)
 
-This bot is designed to run on a Render Web Service, even on the free plan.
+This bot is optimized for Render Free Plan:
 
-1. Create a new Web Service
-
-Build command:
-
+Build Command
 pip install -r requirements.txt
 
-
-Start command:
-
+Start Command
 python bot.py
 
+Environment Variables
 
-Root directory: .
+Add (minimum):
 
-Environment variable:
+DISCORD_BOT_TOKEN=xxxxx
+PORT=10000
 
-DISCORD_BOT_TOKEN = your_bot_token_here
+Keep the bot awake
 
-2. Keep Render Awake (Required on Free Tier)
+Render sleeps free instances unless they receive HTTP traffic.
 
-Render free services sleep without incoming HTTP traffic.
+Use UptimeRobot:
 
-This bot includes a /health endpoint, so you can keep it awake using:
+Setting	Value
+Type	HTTP(s) Monitor
+URL	https://<your-render-url>/health
+Interval	Every 5 minutes
 
-UptimeRobot
+This pings the built-in aiohttp server to prevent sleeping.
 
-Create a “HTTP(s) Monitor”
+🧠 How the Web Server Works
 
-URL:
+The bot spins up a small aiohttp server:
 
-https://dashboard.uptimerobot.com/monitors/801805781
-
-
-Interval: Every 5 minutes
-
-This keeps your bot running 24/7.
-
-🧠 How the Keep-Alive Web Server Works
-
-Inside bot.py, an aiohttp server runs alongside the Discord bot:
-
-async def handle_health(request):
-    return web.Response(text="OK")
+app.router.add_get("/health", handle_health)
+app.router.add_post("/readai-webhook", readai_webhook)
 
 
-Render detects incoming traffic to /health, so your free instance is never marked as idle.
+This enables:
 
-🔐 Environment Variables
-Variable	Description
-DISCORD_BOT_TOKEN	Your Discord bot secret token
+Render uptime protection
 
-⚠️ Never commit your token or put it in your code.
+Accepting Read.ai meeting data
 
-🧪 Testing
+Future support for Zoom or Notion webhooks
 
-After deployment:
+🧩 Cogs (Modular Bot Logic)
 
-Check your bot appears online in Discord
+Every cog file in cogs/ can contain:
 
-Send any message → bot should react with ✅
+Message listeners
 
-Send "hello bot" → bot replies "Hey!"
+Commands
 
-Visit your /health URL → should show:
+Team-specific automation
 
-OK
+Example cog entry point:
 
-🛠️ Built With
+async def setup(bot):
+    await bot.add_cog(MyTeamCog(bot))
 
-Python 3.x
 
-discord.py
+You load new cogs by adding them to bot.py:
 
-aiohttp
+extensions = [
+    "cogs.alerts",
+    "cogs.all_teams_general",
+    "cogs.ai_robotics",
+    ...
+]
 
-Render Web Services
+🔗 External Services
+Read.ai
+
+Webhook URL handled by:
+
+/readai-webhook
+
+
+Bot posts recaps automatically to the right team’s *-meetings channel.
+
+Notion
+
+Used for:
+
+Time entry processing
+
+Task monitoring
+
+Future automation pipelines
+
+Toggl
+
+Automations for:
+
+Time entries
+
+Debugging Toggl → Discord sync issues
+
+Zoom
+
+Webhook-ready to log or process meeting events.
+
+🧪 Testing the Bot
+Basic Functionality
+
+Bot appears online
+
+Reacts to every message with a checkmark
+
+Replies to “hello bot”
+
+/health returns “OK”
+
+Webhook & Automation Tests
+
+Trigger Read.ai test webhook → verify message arrives in the correct channel
+
+Run Notion command:
+
+!notion_updates 1
+
+
+Trigger Toggl updates
 
 📝 License
 
-This project is open-source. You may reuse, modify, and adapt it freely.
+Open-source. You may reuse or modify as needed.
