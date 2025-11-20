@@ -5,6 +5,9 @@ import asyncio
 import discord
 from aiohttp import web
 from datetime import datetime, timedelta
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s: %(message)s")
@@ -154,7 +157,6 @@ async def start_web_server():
     # Keep the web server task alive
     while True:
         await asyncio.sleep(3600)
-
 
 async def main():
     # Read token from environment variable set on Render

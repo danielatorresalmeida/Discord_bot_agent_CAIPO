@@ -31,3 +31,12 @@ class ReadAIClient:
 
         # Later: implement real HTTP request here
         return f"(ReadAI stub) Summary for meeting {meeting_id} (real API not implemented yet)."
+from services.notifications import notify_personal
+
+...
+await target_channel.send(embed=embed)  # existing line
+
+await notify_personal(
+    self.bot,
+    f"✅ Sent {len(entries)} time entries to {target_channel.mention}"
+)
